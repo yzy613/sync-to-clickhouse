@@ -10,6 +10,7 @@ import (
 	"sync-mysql-to-clickhouse/internal/consts"
 	"sync-mysql-to-clickhouse/internal/service"
 	"sync-mysql-to-clickhouse/utility"
+	"syscall"
 	"time"
 )
 
@@ -33,7 +34,7 @@ var (
 			g.Log().Info(ctx, "auto flush set", count, interval.String())
 
 			signalCh := make(chan os.Signal, 1)
-			signal.Notify(signalCh, os.Interrupt, os.Kill)
+			signal.Notify(signalCh, syscall.SIGINT, syscall.SIGKILL, syscall.SIGTERM)
 
 			loopCtx, loopCancel := context.WithCancel(ctx)
 			overCh := make(chan struct{}, 1)
