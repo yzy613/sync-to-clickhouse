@@ -64,7 +64,7 @@ var (
 			schema := utility.CommaStringToSet(service.Cfg().CanalSchema(ctx))
 			table := utility.CommaStringToSet(service.Cfg().CanalTable(ctx))
 
-			{
+			if service.Cfg().IsClickHouseEnableOptimizeTable(ctx) {
 				var interval time.Duration
 				interval, err = service.Cfg().ClickHouseOptimizeTable(ctx)
 				if err != nil {
