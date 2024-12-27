@@ -14,6 +14,8 @@ type (
 	IClickHouse interface {
 		SetDBLink(link string) (err error)
 		SetAutoFlush(ctx context.Context, count uint, interval time.Duration)
+		SetAutoOptimizeTable(ctx context.Context, interval time.Duration, table map[string]struct{})
+		OptimizeTable(ctx context.Context, table map[string]struct{}) (err error)
 		Flush(ctx context.Context) error
 		DumpToDisk(ctx context.Context) (err error)
 		RestoreFromDisk(ctx context.Context) (err error)

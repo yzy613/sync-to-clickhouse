@@ -14,3 +14,9 @@ func (s *sCfg) ClickHouseAutoFlush(ctx context.Context) (count uint, interval ti
 	interval, err = gtime.ParseDuration(intervalStr)
 	return
 }
+
+func (s *sCfg) ClickHouseOptimizeTable(ctx context.Context) (interval time.Duration, err error) {
+	intervalStr := gcfg.Instance().MustGet(ctx, "clickhouse.optimizeTable.interval", "1h").String()
+	interval, err = gtime.ParseDuration(intervalStr)
+	return
+}

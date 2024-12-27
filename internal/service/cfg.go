@@ -18,6 +18,7 @@ type (
 		CanalTable(ctx context.Context) (table string)
 		DBLink(ctx context.Context) (link string)
 		ClickHouseAutoFlush(ctx context.Context) (count uint, interval time.Duration, err error)
+		ClickHouseOptimizeTable(ctx context.Context) (interval time.Duration, err error)
 	}
 )
 

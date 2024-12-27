@@ -26,12 +26,18 @@ var (
 				return
 			}
 
-			count, interval, err := service.Cfg().ClickHouseAutoFlush(ctx)
-			if err != nil {
-				return
+			{
+				var (
+					count    uint
+					interval time.Duration
+				)
+				count, interval, err = service.Cfg().ClickHouseAutoFlush(ctx)
+				if err != nil {
+					return
+				}
+				service.ClickHouse().SetAutoFlush(ctx, count, interval)
+				g.Log().Info(ctx, "auto flush set", count, interval.String())
 			}
-			service.ClickHouse().SetAutoFlush(ctx, count, interval)
-			g.Log().Info(ctx, "auto flush set", count, interval.String())
 
 			signalCh := make(chan os.Signal, 1)
 			signal.Notify(signalCh, syscall.SIGINT, syscall.SIGKILL, syscall.SIGTERM)
@@ -55,6 +61,19 @@ var (
 				doneCh <- struct{}{}
 			}()
 
+			schema := utility.CommaStringToSet(service.Cfg().CanalSchema(ctx))
+			table := utility.CommaStringToSet(service.Cfg().CanalTable(ctx))
+
+			{
+				var interval time.Duration
+				interval, err = service.Cfg().ClickHouseOptimizeTable(ctx)
+				if err != nil {
+					return
+				}
+				service.ClickHouse().SetAutoOptimizeTable(ctx, interval, table)
+				g.Log().Info(ctx, "auto optimize table set", interval.String())
+			}
+
 			// canal
 		canalLoop:
 			for {
@@ -77,9 +96,6 @@ var (
 						g.Log().Error(ctx, err)
 						return
 					}
-
-					schema := utility.CommaStringToSet(service.Cfg().CanalSchema(ctx))
-					table := utility.CommaStringToSet(service.Cfg().CanalTable(ctx))
 
 				getLoop:
 					for {

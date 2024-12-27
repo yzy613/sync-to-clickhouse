@@ -23,6 +23,9 @@ type sClickHouse struct {
 	autoFlushCancel context.CancelFunc
 	autoFlushRWMu   sync.RWMutex
 	autoFlushCount  uint
+
+	autoOptimizeTableCtx    context.Context
+	autoOptimizeTableCancel context.CancelFunc
 }
 
 func New() *sClickHouse {
@@ -41,23 +44,26 @@ func (s *sClickHouse) SetDBLink(link string) (err error) {
 }
 
 func (s *sClickHouse) SetAutoFlush(ctx context.Context, count uint, interval time.Duration) {
-	if s.autoFlushCtx != nil {
+	if s.autoFlushCtx != nil && s.autoFlushCancel != nil {
 		s.autoFlushCancel()
 	}
 	s.autoFlushRWMu.Lock()
 	defer s.autoFlushRWMu.Unlock()
 
 	s.autoFlushCtx, s.autoFlushCancel = context.WithCancel(context.Background())
+	s.autoFlushCount = count
 
 	go func() {
 		ticker := time.NewTicker(interval)
 		defer ticker.Stop()
 
+		localCtx := s.autoFlushCtx
+
 		for {
 			select {
 			case <-ctx.Done():
 				return
-			case <-s.autoFlushCtx.Done():
+			case <-localCtx.Done():
 				return
 			case <-ticker.C:
 				if err := s.Flush(ctx); err != nil {
@@ -66,8 +72,46 @@ func (s *sClickHouse) SetAutoFlush(ctx context.Context, count uint, interval tim
 			}
 		}
 	}()
+}
 
-	s.autoFlushCount = count
+func (s *sClickHouse) SetAutoOptimizeTable(ctx context.Context, interval time.Duration, table map[string]struct{}) {
+	if s.autoOptimizeTableCtx != nil && s.autoOptimizeTableCancel != nil {
+		s.autoOptimizeTableCancel()
+	}
+	s.autoOptimizeTableCtx, s.autoOptimizeTableCancel = context.WithCancel(context.Background())
+
+	go func() {
+		ticker := time.NewTicker(interval)
+		defer ticker.Stop()
+
+		localCtx := s.autoOptimizeTableCtx
+
+		for {
+			select {
+			case <-ctx.Done():
+				return
+			case <-localCtx.Done():
+				return
+			case <-ticker.C:
+				if err := s.OptimizeTable(ctx, table); err != nil {
+					g.Log().Error(ctx, err)
+				}
+			}
+		}
+	}()
+}
+
+func (s *sClickHouse) OptimizeTable(ctx context.Context, table map[string]struct{}) (err error) {
+	if err = s.hasDB(); err != nil {
+		return
+	}
+
+	for k := range table {
+		if _, err = s.db.Exec(ctx, "OPTIMIZE TABLE "+k+" FINAL"); err != nil {
+			return
+		}
+	}
+	return
 }
 
 func (s *sClickHouse) Flush(ctx context.Context) error {
