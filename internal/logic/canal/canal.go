@@ -3,7 +3,7 @@ package canal
 import (
 	"context"
 	"github.com/withlin/canal-go/client"
-	"sync-mysql-to-clickhouse/internal/service"
+	"sync-to-clickhouse/internal/service"
 )
 
 type sCanal struct{}

@@ -1,4 +1,4 @@
-BINARY_NAME = sync-mysql-to-clickhouse
+BINARY_NAME = sync-to-clickhouse
 CODE_FILE = ./main.go
 OUTPUT_PATH = ./manifest/build
 GIT_TAG = $(shell git describe --tags --abbrev=0)

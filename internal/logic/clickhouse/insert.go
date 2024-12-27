@@ -7,7 +7,7 @@ import (
 	"github.com/gogf/gf/v2/frame/g"
 	"os"
 	"sort"
-	"sync-mysql-to-clickhouse/utility"
+	"sync-to-clickhouse/utility"
 )
 
 type insertQueueData struct {

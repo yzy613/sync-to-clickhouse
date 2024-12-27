@@ -8,7 +8,7 @@ import (
 	"github.com/gogf/gf/v2/frame/g"
 	"golang.org/x/sync/errgroup"
 	"sync"
-	"sync-mysql-to-clickhouse/internal/service"
+	"sync-to-clickhouse/internal/service"
 	"time"
 )
 

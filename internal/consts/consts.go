@@ -6,7 +6,7 @@ import (
 )
 
 const (
-	ProjName = "sync-mysql-to-clickhouse"
+	ProjName = "sync-to-clickhouse"
 	Version  = "0.1.1"
 )
 

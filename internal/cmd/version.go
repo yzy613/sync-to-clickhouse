@@ -4,7 +4,7 @@ import (
 	"context"
 	"fmt"
 	"github.com/gogf/gf/v2/os/gcmd"
-	"sync-mysql-to-clickhouse/internal/consts"
+	"sync-to-clickhouse/internal/consts"
 )
 
 var (

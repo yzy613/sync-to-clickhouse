@@ -7,7 +7,7 @@ import (
 	"github.com/gogf/gf/v2/os/gcmd"
 	"os"
 	"runtime"
-	"sync-mysql-to-clickhouse/internal/consts"
+	"sync-to-clickhouse/internal/consts"
 )
 
 const (

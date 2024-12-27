@@ -5,7 +5,7 @@ import (
 	"github.com/gogf/gf/v2/frame/g"
 	"github.com/withlin/canal-go/protocol/entry"
 	"google.golang.org/protobuf/proto"
-	"sync-mysql-to-clickhouse/internal/service"
+	"sync-to-clickhouse/internal/service"
 )
 
 func (s *sCanal) ParseEntries(

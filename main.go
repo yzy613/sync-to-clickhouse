@@ -3,8 +3,8 @@ package main
 import (
 	"context"
 	_ "github.com/gogf/gf/contrib/drivers/clickhouse/v2"
-	"sync-mysql-to-clickhouse/internal/cmd"
-	_ "sync-mysql-to-clickhouse/internal/logic"
+	"sync-to-clickhouse/internal/cmd"
+	_ "sync-to-clickhouse/internal/logic"
 )
 
 func main() {

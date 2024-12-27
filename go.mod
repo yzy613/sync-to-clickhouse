@@ -1,4 +1,4 @@
-module sync-mysql-to-clickhouse
+module sync-to-clickhouse
 
 go 1.23
 

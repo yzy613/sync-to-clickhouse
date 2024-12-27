@@ -3,7 +3,7 @@ package cfg
 import (
 	"context"
 	"github.com/gogf/gf/v2/os/gcfg"
-	"sync-mysql-to-clickhouse/internal/service"
+	"sync-to-clickhouse/internal/service"
 )
 
 type sCfg struct{}

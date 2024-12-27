@@ -7,9 +7,9 @@ import (
 	"github.com/withlin/canal-go/protocol"
 	"os"
 	"os/signal"
-	"sync-mysql-to-clickhouse/internal/consts"
-	"sync-mysql-to-clickhouse/internal/service"
-	"sync-mysql-to-clickhouse/utility"
+	"sync-to-clickhouse/internal/consts"
+	"sync-to-clickhouse/internal/service"
+	"sync-to-clickhouse/utility"
 	"syscall"
 	"time"
 )
