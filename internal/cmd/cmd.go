@@ -56,7 +56,6 @@ var (
 				<-overCh
 
 				err = service.ClickHouse().DumpToDisk(ctx)
-				g.Log().Info(ctx, "dump to disk")
 
 				doneCh <- struct{}{}
 			}()
@@ -86,7 +85,7 @@ var (
 				func() {
 					connector := service.Canal().NewConnector(ctx)
 
-					g.Log().Info(ctx, "connecting to canal")
+					g.Log().Info(ctx, "connect to canal")
 					if err = connector.Connect(); err != nil {
 						g.Log().Error(ctx, err)
 						return

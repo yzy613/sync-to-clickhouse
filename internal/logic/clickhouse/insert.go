@@ -110,6 +110,8 @@ func (s *sClickHouse) flushInsertQueue(ctx context.Context) (err error) {
 		return
 	}
 
+	g.Log().Info(ctx, "flush insert queue", len(poppedSlice))
+
 	sort.Sort(poppedSlice)
 
 	var (
@@ -136,8 +138,8 @@ func (s *sClickHouse) flushInsertQueue(ctx context.Context) (err error) {
 			stmt, args := utility.InsertStatement(lastTable, tmp)
 
 			if _, err = s.db.Exec(ctx, stmt, args); err != nil {
+				g.Log().Error(ctx, err)
 				s.pushInsertQueueDataSlice(arr)
-				return
 			}
 		}
 
@@ -161,8 +163,8 @@ func (s *sClickHouse) flushInsertQueue(ctx context.Context) (err error) {
 		stmt, args := utility.InsertStatement(lastTable, tmp)
 
 		if _, err = s.db.Exec(ctx, stmt, args); err != nil {
+			g.Log().Error(ctx, err)
 			s.pushInsertQueueDataSlice(arr)
-			return
 		}
 	}
 
@@ -202,6 +204,8 @@ func (s *sClickHouse) dumpInsertQueueToDisk(ctx context.Context) (err error) {
 		return
 	}
 
+	g.Log().Info(ctx, "dump insert queue", len(data))
+
 	dataBytes, err := sonic.Marshal(data)
 	if err != nil {
 		return
@@ -231,6 +235,11 @@ func (s *sClickHouse) restoreInsertQueueFromDisk(ctx context.Context) (err error
 	if err = sonic.ConfigStd.Unmarshal(dataBytes, &data); err != nil {
 		return
 	}
+	if len(data) == 0 {
+		return
+	}
+
+	g.Log().Info(ctx, "restore insert queue", len(data))
 
 	s.pushInsertQueueDataSlice(data)
 
