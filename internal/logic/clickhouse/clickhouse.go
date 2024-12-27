@@ -53,6 +53,10 @@ func (s *sClickHouse) SetAutoFlush(ctx context.Context, count uint, interval tim
 	s.autoFlushCtx, s.autoFlushCancel = context.WithCancel(context.Background())
 	s.autoFlushCount = count
 
+	if interval == 0 {
+		return
+	}
+
 	go func() {
 		ticker := time.NewTicker(interval)
 		defer ticker.Stop()
@@ -80,6 +84,10 @@ func (s *sClickHouse) SetAutoOptimizeTable(ctx context.Context, interval time.Du
 	}
 	s.autoOptimizeTableCtx, s.autoOptimizeTableCancel = context.WithCancel(context.Background())
 
+	if interval == 0 {
+		return
+	}
+
 	go func() {
 		ticker := time.NewTicker(interval)
 		defer ticker.Stop()
@@ -105,6 +113,8 @@ func (s *sClickHouse) OptimizeTable(ctx context.Context, table map[string]struct
 	if err = s.hasDB(); err != nil {
 		return
 	}
+
+	g.Log().Info(ctx, "optimize table")
 
 	for k := range table {
 		if _, err = s.db.Exec(ctx, "OPTIMIZE TABLE "+k+" FINAL"); err != nil {

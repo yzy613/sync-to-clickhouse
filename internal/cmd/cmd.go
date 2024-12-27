@@ -35,8 +35,8 @@ var (
 				if err != nil {
 					return
 				}
-				service.ClickHouse().SetAutoFlush(ctx, count, interval)
 				g.Log().Info(ctx, "auto flush set", count, interval.String())
+				service.ClickHouse().SetAutoFlush(ctx, count, interval)
 			}
 
 			signalCh := make(chan os.Signal, 1)
@@ -50,8 +50,8 @@ var (
 			go func() {
 				<-signalCh
 
-				loopCancel()
 				g.Log().Info(ctx, "signal received, exiting...")
+				loopCancel()
 
 				<-overCh
 
@@ -69,8 +69,8 @@ var (
 				if err != nil {
 					return
 				}
-				service.ClickHouse().SetAutoOptimizeTable(ctx, interval, table)
 				g.Log().Info(ctx, "auto optimize table set", interval.String())
+				service.ClickHouse().SetAutoOptimizeTable(ctx, interval, table)
 			}
 
 			// canal
