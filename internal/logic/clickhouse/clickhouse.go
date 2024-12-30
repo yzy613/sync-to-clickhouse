@@ -114,13 +114,16 @@ func (s *sClickHouse) OptimizeTable(ctx context.Context, table map[string]struct
 		return
 	}
 
-	g.Log().Info(ctx, "optimize table")
+	g.Log().Info(ctx, "optimize table...")
 
 	for k := range table {
 		if _, err = s.db.Exec(ctx, "OPTIMIZE TABLE "+k+" FINAL"); err != nil {
 			return
 		}
 	}
+
+	g.Log().Info(ctx, "optimize table done")
+
 	return
 }
 

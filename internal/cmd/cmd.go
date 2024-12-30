@@ -63,6 +63,25 @@ var (
 			schema := utility.CommaStringToSet(service.Cfg().CanalSchema(ctx))
 			table := utility.CommaStringToSet(service.Cfg().CanalTable(ctx))
 
+			// optimize table
+			go func() {
+				usrCh := make(chan os.Signal, 1)
+				signal.Notify(usrCh, syscall.SIGUSR2)
+
+				for {
+					select {
+					case <-usrCh:
+						g.Log().Info(ctx, "signal received, optimize table")
+						if err := service.ClickHouse().OptimizeTable(ctx, table); err != nil {
+							g.Log().Error(ctx, err)
+						}
+					case <-loopCtx.Done():
+						signal.Stop(usrCh)
+						return
+					}
+				}
+			}()
+
 			if service.Cfg().IsClickHouseEnableOptimizeTable(ctx) {
 				var interval time.Duration
 				interval, err = service.Cfg().ClickHouseOptimizeTable(ctx)
