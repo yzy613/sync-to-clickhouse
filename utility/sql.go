@@ -5,46 +5,46 @@ import (
 	"strings"
 )
 
-func extractMapKeys(m map[string]string) (k []string) {
-	k = make([]string, 0, len(m))
+func ExtractMapKeys[K comparable, V any](m map[K]V) []K {
+	keys := make([]K, 0, len(m))
 	for key := range m {
-		k = append(k, key)
+		keys = append(keys, key)
 	}
-	return
+	return keys
 }
 
-func extractMapStringValues(m map[string]string, key []string) (v []string) {
-	v = make([]string, 0, len(key))
-	for _, k := range key {
-		v = append(v, m[k])
+func ExtractMapValuesByKeys[K comparable, V any](m map[K]V, keys []K) []V {
+	values := make([]V, 0, len(keys))
+	for _, key := range keys {
+		values = append(values, m[key])
 	}
-	return
+	return values
 }
 
-func InsertStatement(table string, data []map[string]string) (stmt string, args []string) {
+func InsertStatement[T any](table string, data []map[string]T) (stmt string, args []T) {
 	if len(data) == 0 {
 		return
 	}
 
 	if len(data) == 1 {
-		k := extractMapKeys(data[0])
-		args = append(args, extractMapStringValues(data[0], k)...)
+		keys := ExtractMapKeys(data[0])
+		args = append(args, ExtractMapValuesByKeys(data[0], keys)...)
 
 		stmt = fmt.Sprintf("INSERT INTO %s(%s) VALUES (%s)",
 			table,
-			strings.Join(k, ","),
-			strings.Repeat("?,", len(k)-1)+"?",
+			strings.Join(keys, ","),
+			strings.Repeat("?,", len(keys)-1)+"?",
 		)
 		return
 	}
 
 	stmtBuilder := strings.Builder{}
 
-	k := extractMapKeys(data[0])
-	stmtBuilder.WriteString(fmt.Sprintf("INSERT INTO %s(%s) VALUES ", table, strings.Join(k, ",")))
+	keys := ExtractMapKeys(data[0])
+	stmtBuilder.WriteString(fmt.Sprintf("INSERT INTO %s(%s) VALUES ", table, strings.Join(keys, ",")))
 	for _, d := range data {
-		args = append(args, extractMapStringValues(d, k)...)
-		stmtBuilder.WriteString(fmt.Sprintf("(%s),", strings.Repeat("?,", len(k)-1)+"?"))
+		args = append(args, ExtractMapValuesByKeys(d, keys)...)
+		stmtBuilder.WriteString(fmt.Sprintf("(%s),", strings.Repeat("?,", len(keys)-1)+"?"))
 	}
 
 	stmt = strings.TrimSuffix(stmtBuilder.String(), ",")

@@ -62,6 +62,7 @@ var (
 
 			schema := utility.CommaStringToSet(service.Cfg().CanalSchema(ctx))
 			table := utility.CommaStringToSet(service.Cfg().CanalTable(ctx))
+			g.Log().Info(ctx, "load schema", len(schema), "table", len(table))
 
 			// optimize table
 			go func() {

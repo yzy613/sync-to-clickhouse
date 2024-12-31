@@ -232,7 +232,7 @@ func (s *sClickHouse) restoreInsertQueueFromDisk(ctx context.Context) (err error
 	}
 
 	var data []insertQueueData
-	if err = sonic.ConfigStd.Unmarshal(dataBytes, &data); err != nil {
+	if err = sonic.Unmarshal(dataBytes, &data); err != nil {
 		return
 	}
 	if len(data) == 0 {
