@@ -51,7 +51,7 @@ var (
 			overCh := make(chan struct{}, 1)
 			doneCh := make(chan struct{}, 1)
 
-			// handle signal
+			// handle loop signal
 			go func() {
 				<-signalCh
 
@@ -70,7 +70,26 @@ var (
 			table := utility.CommaStringToSet(service.Cfg().CanalTable(ctx))
 			g.Log().Info(ctx, "load schema", len(schema), "table", len(table))
 
-			// optimize table
+			// handle flush signal
+			go func() {
+				usrCh := make(chan os.Signal, 1)
+				signal.Notify(usrCh, syscall.SIGUSR1)
+
+				for {
+					select {
+					case <-usrCh:
+						g.Log().Info(ctx, "signal received, flush...")
+						if err := service.ClickHouse().Flush(ctx); err != nil {
+							g.Log().Error(ctx, err)
+						}
+					case <-loopCtx.Done():
+						signal.Stop(usrCh)
+						return
+					}
+				}
+			}()
+
+			// handle optimize table signal
 			go func() {
 				usrCh := make(chan os.Signal, 1)
 				signal.Notify(usrCh, syscall.SIGUSR2)
@@ -78,7 +97,7 @@ var (
 				for {
 					select {
 					case <-usrCh:
-						g.Log().Info(ctx, "signal received, optimize table")
+						g.Log().Info(ctx, "signal received, optimize table...")
 						if err := service.ClickHouse().OptimizeTable(ctx, table); err != nil {
 							g.Log().Error(ctx, err)
 						}
