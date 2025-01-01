@@ -13,6 +13,14 @@ func (s *sClickHouse) lazyInitCrontab() {
 	}
 }
 
+func (s *sClickHouse) rewriteCrontabExpr(expr string) string {
+	// linux crontab pattern
+	if len(strings.Split(expr, " ")) == 5 {
+		return "# " + expr
+	}
+	return expr
+}
+
 func (s *sClickHouse) SetCrontabFlush(
 	ctx context.Context,
 	crontabExpr string,
@@ -30,14 +38,9 @@ func (s *sClickHouse) SetCrontabFlush(
 		return
 	}
 
-	// linux crontab pattern
-	if len(strings.Split(crontabExpr, " ")) == 5 {
-		crontabExpr = "# " + crontabExpr
-	}
-
 	entry, err := s.crontab.AddSingleton(
 		ctx,
-		crontabExpr,
+		s.rewriteCrontabExpr(crontabExpr),
 		func(ctx context.Context) {
 			if err := s.Flush(ctx); err != nil {
 				g.Log().Error(ctx, err)
@@ -77,14 +80,9 @@ func (s *sClickHouse) SetCrontabOptimizeTable(
 		return
 	}
 
-	// linux crontab pattern
-	if len(strings.Split(crontabExpr, " ")) == 5 {
-		crontabExpr = "# " + crontabExpr
-	}
-
 	entry, err := s.crontab.AddSingleton(
 		ctx,
-		crontabExpr,
+		s.rewriteCrontabExpr(crontabExpr),
 		func(ctx context.Context) {
 			if err := s.OptimizeTable(ctx, table); err != nil {
 				g.Log().Error(ctx, err)
