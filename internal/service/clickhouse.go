@@ -7,18 +7,18 @@ package service
 
 import (
 	"context"
-	"time"
 )
 
 type (
 	IClickHouse interface {
 		SetDBLink(link string) (err error)
-		SetAutoFlush(ctx context.Context, count uint, interval time.Duration)
-		SetAutoOptimizeTable(ctx context.Context, interval time.Duration, table map[string]struct{})
-		OptimizeTable(ctx context.Context, table map[string]struct{}) (err error)
 		Flush(ctx context.Context) error
+		OptimizeTable(ctx context.Context, table map[string]struct{}) (err error)
 		DumpToDisk(ctx context.Context) (err error)
 		RestoreFromDisk(ctx context.Context) (err error)
+		SetCountFlush(count uint)
+		SetCrontabFlush(ctx context.Context, crontabExpr string, isEnableOptimizeTable bool) (err error)
+		SetCrontabOptimizeTable(ctx context.Context, crontabExpr string, table map[string]struct{}) (err error)
 		Insert(ctx context.Context, table string, data []map[string]string) (err error)
 	}
 )

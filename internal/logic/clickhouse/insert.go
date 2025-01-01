@@ -3,6 +3,7 @@ package clickhouse
 import (
 	"context"
 	"github.com/bytedance/sonic"
+	"github.com/gogf/gf/v2/container/gqueue"
 	"github.com/gogf/gf/v2/errors/gerror"
 	"github.com/gogf/gf/v2/frame/g"
 	"os"
@@ -13,6 +14,12 @@ import (
 type insertQueueData struct {
 	Table string              `json:"table"`
 	Data  []map[string]string `json:"data"`
+}
+
+func (s *sClickHouse) lazyInitInsertQueue() {
+	if s.insertQueue == nil {
+		s.insertQueue = gqueue.New()
+	}
 }
 
 type insertQueueDataSlice []insertQueueData
@@ -54,14 +61,11 @@ func (s *sClickHouse) Insert(ctx context.Context, table string, data []map[strin
 
 	// auto flush
 	err = func() (err error) {
-		s.autoFlushRWMu.RLock()
-		defer s.autoFlushRWMu.RUnlock()
-
-		if s.autoFlushCount == 0 {
+		if s.flushCount == 0 {
 			return
 		}
 
-		if s.insertQueue.Len() >= int64(s.autoFlushCount) {
+		if s.insertQueue.Len() >= int64(s.flushCount) {
 			if err = s.flushInsertQueue(ctx); err != nil {
 				return
 			}

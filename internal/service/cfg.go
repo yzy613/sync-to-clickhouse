@@ -7,7 +7,6 @@ package service
 
 import (
 	"context"
-	"time"
 )
 
 type (
@@ -17,9 +16,10 @@ type (
 		CanalSchema(ctx context.Context) (schema string)
 		CanalTable(ctx context.Context) (table string)
 		DBLink(ctx context.Context) (link string)
-		ClickHouseAutoFlush(ctx context.Context) (count uint, interval time.Duration, err error)
-		IsClickHouseEnableOptimizeTable(ctx context.Context) bool
-		ClickHouseOptimizeTable(ctx context.Context) (interval time.Duration, err error)
+		ClickHouseCountFlush(ctx context.Context) uint
+		ClickHouseCrontabFlush(ctx context.Context) string
+		IsEnableClickHouseOptimizeTableWhenCrontabFlush(ctx context.Context) bool
+		ClickHouseCrontabOptimizeTable(ctx context.Context) string
 	}
 )
 

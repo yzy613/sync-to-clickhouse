@@ -26,22 +26,27 @@ var (
 				return
 			}
 
-			{
-				var (
-					count    uint
-					interval time.Duration
-				)
-				count, interval, err = service.Cfg().ClickHouseAutoFlush(ctx)
-				if err != nil {
-					return
-				}
-				g.Log().Info(ctx, "auto flush set", count, interval.String())
-				service.ClickHouse().SetAutoFlush(ctx, count, interval)
+			// count flush
+			if count := service.Cfg().ClickHouseCountFlush(ctx); count > 0 {
+				g.Log().Info(ctx, "count flush set", count)
+				service.ClickHouse().SetCountFlush(count)
 			}
 
+			// crontab flush
+			if expr := service.Cfg().ClickHouseCrontabFlush(ctx); expr != "" {
+				isEnableOptimizeTable := service.Cfg().IsEnableClickHouseOptimizeTableWhenCrontabFlush(ctx)
+
+				g.Log().Info(ctx, "crontab flush set", expr, "optimize table", isEnableOptimizeTable)
+				if err := service.ClickHouse().SetCrontabFlush(ctx, expr, isEnableOptimizeTable); err != nil {
+					g.Log().Error(ctx, err)
+				}
+			}
+
+			// signal
 			signalCh := make(chan os.Signal, 1)
 			signal.Notify(signalCh, syscall.SIGINT, syscall.SIGKILL, syscall.SIGTERM)
 
+			// loop control
 			loopCtx, loopCancel := context.WithCancel(ctx)
 			overCh := make(chan struct{}, 1)
 			doneCh := make(chan struct{}, 1)
@@ -60,6 +65,7 @@ var (
 				doneCh <- struct{}{}
 			}()
 
+			// schema and table
 			schema := utility.CommaStringToSet(service.Cfg().CanalSchema(ctx))
 			table := utility.CommaStringToSet(service.Cfg().CanalTable(ctx))
 			g.Log().Info(ctx, "load schema", len(schema), "table", len(table))
@@ -83,14 +89,12 @@ var (
 				}
 			}()
 
-			if service.Cfg().IsClickHouseEnableOptimizeTable(ctx) {
-				var interval time.Duration
-				interval, err = service.Cfg().ClickHouseOptimizeTable(ctx)
-				if err != nil {
-					return
+			// crontab optimize table
+			if expr := service.Cfg().ClickHouseCrontabOptimizeTable(ctx); expr != "" {
+				g.Log().Info(ctx, "crontab optimize table set", expr)
+				if err := service.ClickHouse().SetCrontabOptimizeTable(ctx, expr, table); err != nil {
+					g.Log().Error(ctx, err)
 				}
-				g.Log().Info(ctx, "auto optimize table set", interval.String())
-				service.ClickHouse().SetAutoOptimizeTable(ctx, interval, table)
 			}
 
 			// canal
