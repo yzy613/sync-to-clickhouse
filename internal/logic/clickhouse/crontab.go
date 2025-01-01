@@ -13,7 +13,11 @@ func (s *sClickHouse) lazyInitCrontab() {
 	}
 }
 
-func (s *sClickHouse) SetCrontabFlush(ctx context.Context, crontabExpr string, isEnableOptimizeTable bool) (err error) {
+func (s *sClickHouse) SetCrontabFlush(
+	ctx context.Context,
+	crontabExpr string,
+	table map[string]struct{},
+) (err error) {
 	s.lazyInitCrontab()
 
 	if s.flushEntry != nil {
@@ -31,28 +35,20 @@ func (s *sClickHouse) SetCrontabFlush(ctx context.Context, crontabExpr string, i
 		crontabExpr = "# " + crontabExpr
 	}
 
-	var f func(ctx context.Context)
-	if isEnableOptimizeTable {
-		f = func(ctx context.Context) {
-			if err := s.Flush(ctx); err != nil {
-				g.Log().Error(ctx, err)
-			}
-			if err := s.OptimizeTable(ctx, nil); err != nil {
-				g.Log().Error(ctx, err)
-			}
-		}
-	} else {
-		f = func(ctx context.Context) {
-			if err := s.Flush(ctx); err != nil {
-				g.Log().Error(ctx, err)
-			}
-		}
-	}
-
 	entry, err := s.crontab.AddSingleton(
 		ctx,
 		crontabExpr,
-		f,
+		func(ctx context.Context) {
+			if err := s.Flush(ctx); err != nil {
+				g.Log().Error(ctx, err)
+			}
+			if table == nil || len(table) == 0 {
+				return
+			}
+			if err := s.OptimizeTable(ctx, table); err != nil {
+				g.Log().Error(ctx, err)
+			}
+		},
 		"flush",
 	)
 	if err != nil {
@@ -64,7 +60,11 @@ func (s *sClickHouse) SetCrontabFlush(ctx context.Context, crontabExpr string, i
 	return
 }
 
-func (s *sClickHouse) SetCrontabOptimizeTable(ctx context.Context, crontabExpr string, table map[string]struct{}) (err error) {
+func (s *sClickHouse) SetCrontabOptimizeTable(
+	ctx context.Context,
+	crontabExpr string,
+	table map[string]struct{},
+) (err error) {
 	s.lazyInitCrontab()
 
 	if s.optimizeTableEntry != nil {

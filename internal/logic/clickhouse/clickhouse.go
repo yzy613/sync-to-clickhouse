@@ -65,7 +65,7 @@ func (s *sClickHouse) OptimizeTable(ctx context.Context, table map[string]struct
 		}
 	}
 
-	g.Log().Info(ctx, "optimize table done")
+	g.Log().Info(ctx, "optimize table done", len(table))
 
 	return
 }
