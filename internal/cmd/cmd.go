@@ -50,7 +50,15 @@ var (
 
 				<-overCh
 
-				err = service.ClickHouse().DumpToDisk(ctx)
+				if err := service.ClickHouse().DumpToDisk(ctx); err != nil {
+					g.Log().Error(ctx, err)
+				}
+
+				if errs := service.ClickHouse().Close(ctx); len(errs) > 0 {
+					for _, err := range errs {
+						g.Log().Error(ctx, err)
+					}
+				}
 
 				doneCh <- struct{}{}
 			}()

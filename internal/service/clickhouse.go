@@ -16,6 +16,7 @@ type (
 		OptimizeTable(ctx context.Context, table map[string]struct{}) (err error)
 		DumpToDisk(ctx context.Context) (err error)
 		RestoreFromDisk(ctx context.Context) (err error)
+		Close(ctx context.Context) (errs []error)
 		SetCountFlush(count uint)
 		SetCrontabFlush(ctx context.Context, crontabExpr string, table map[string]struct{}) (err error)
 		SetCrontabOptimizeTable(ctx context.Context, crontabExpr string, table map[string]struct{}) (err error)
