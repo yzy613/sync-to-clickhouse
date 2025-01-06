@@ -42,16 +42,16 @@ fi
 echo "SQL script executed successfully."
 
 # 获取目标进程的PID
-PID=$(pgrep -f "$TARGET_PROCESS")
+STC_PID=$(pgrep -f "$TARGET_PROCESS")
 
 # 检查是否找到进程
-if [ -z "$PID" ]; then
+if [ -z "$STC_PID" ]; then
     echo "Error: Process '$TARGET_PROCESS' not found. Unable to send SIGUSR2 signal." >&2
     exit 1
 fi
 
-echo "Found process '$TARGET_PROCESS' with PID $PID. Sending SIGUSR2 signal."
-kill -SIGUSR2 "$PID"
+echo "Found process '$TARGET_PROCESS' with PID $STC_PID. Sending SIGUSR2 signal."
+kill -SIGUSR2 "$STC_PID"
 
 # 检查信号是否发送成功
 if [ $? -ne 0 ]; then
