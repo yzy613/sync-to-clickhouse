@@ -41,6 +41,8 @@ fi
 
 echo "SQL script executed successfully."
 
+exit 0
+
 # 获取目标进程的PID
 STC_PID=$(pgrep -f "$TARGET_PROCESS")
 
