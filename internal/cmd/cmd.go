@@ -32,6 +32,17 @@ var (
 				service.ClickHouse().SetCountFlush(count)
 			}
 
+			// crontab flush
+			if expr := service.Cfg().ClickHouseCrontabFlush(ctx); expr != "" {
+				g.Log().Info(ctx, "crontab flush set", expr)
+				if err := service.ClickHouse().SetCrontabFlush(ctx, expr); err != nil {
+					g.Log().Error(ctx, err)
+				}
+			}
+
+			// optimize table after insert
+			g.Log().Info(ctx, "optimize table after insert", service.Cfg().IsClickHouseOptimizeTableAfterInsert(ctx))
+
 			// signal
 			signalCh := make(chan os.Signal, 1)
 			signal.Notify(signalCh, syscall.SIGINT, syscall.SIGKILL, syscall.SIGTERM)
@@ -67,20 +78,6 @@ var (
 			schema := utility.CommaStringToSet(service.Cfg().CanalSchema(ctx))
 			table := utility.CommaStringToSet(service.Cfg().CanalTable(ctx))
 			g.Log().Info(ctx, "load schema", len(schema), "table", len(table))
-
-			// crontab flush
-			if expr := service.Cfg().ClickHouseCrontabFlush(ctx); expr != "" {
-				isEnableOptimizeTable := service.Cfg().IsEnableClickHouseOptimizeTableWhenCrontabFlush(ctx)
-				var tab map[string]struct{}
-				if isEnableOptimizeTable {
-					tab = table
-				}
-
-				g.Log().Info(ctx, "crontab flush set", expr, "optimize table", isEnableOptimizeTable)
-				if err := service.ClickHouse().SetCrontabFlush(ctx, expr, tab); err != nil {
-					g.Log().Error(ctx, err)
-				}
-			}
 
 			// crontab optimize table
 			if expr := service.Cfg().ClickHouseCrontabOptimizeTable(ctx); expr != "" {

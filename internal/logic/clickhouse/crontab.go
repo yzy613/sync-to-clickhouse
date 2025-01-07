@@ -24,7 +24,6 @@ func (s *sClickHouse) rewriteCrontabExpr(expr string) string {
 func (s *sClickHouse) SetCrontabFlush(
 	ctx context.Context,
 	crontabExpr string,
-	table map[string]struct{},
 ) (err error) {
 	s.lazyInitCrontab()
 
@@ -43,12 +42,6 @@ func (s *sClickHouse) SetCrontabFlush(
 		s.rewriteCrontabExpr(crontabExpr),
 		func(ctx context.Context) {
 			if err := s.Flush(ctx); err != nil {
-				g.Log().Error(ctx, err)
-			}
-			if table == nil || len(table) == 0 {
-				return
-			}
-			if err := s.OptimizeTable(ctx, table); err != nil {
 				g.Log().Error(ctx, err)
 			}
 		},

@@ -16,9 +16,9 @@ type (
 		CanalSchema(ctx context.Context) (schema string)
 		CanalTable(ctx context.Context) (table string)
 		DBLink(ctx context.Context) (link string)
+		IsClickHouseOptimizeTableAfterInsert(ctx context.Context) bool
 		ClickHouseCountFlush(ctx context.Context) uint
 		ClickHouseCrontabFlush(ctx context.Context) string
-		IsEnableClickHouseOptimizeTableWhenCrontabFlush(ctx context.Context) bool
 		ClickHouseCrontabOptimizeTable(ctx context.Context) string
 	}
 )

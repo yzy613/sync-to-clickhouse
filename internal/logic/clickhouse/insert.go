@@ -8,6 +8,7 @@ import (
 	"github.com/gogf/gf/v2/frame/g"
 	"os"
 	"sort"
+	"sync-to-clickhouse/internal/service"
 	"sync-to-clickhouse/utility"
 )
 
@@ -144,6 +145,17 @@ func (s *sClickHouse) flushInsertQueue(ctx context.Context) (err error) {
 			if _, err = s.db.Exec(ctx, stmt, args); err != nil {
 				g.Log().Error(ctx, err)
 				s.pushInsertQueueDataSlice(arr)
+			} else {
+				if service.Cfg().IsClickHouseOptimizeTableAfterInsert(ctx) {
+					go func() {
+						if err := s.OptimizeTable(
+							context.WithoutCancel(ctx),
+							map[string]struct{}{lastTable: {}},
+						); err != nil {
+							g.Log().Error(ctx, err)
+						}
+					}()
+				}
 			}
 		}
 
@@ -169,6 +181,17 @@ func (s *sClickHouse) flushInsertQueue(ctx context.Context) (err error) {
 		if _, err = s.db.Exec(ctx, stmt, args); err != nil {
 			g.Log().Error(ctx, err)
 			s.pushInsertQueueDataSlice(arr)
+		} else {
+			if service.Cfg().IsClickHouseOptimizeTableAfterInsert(ctx) {
+				go func() {
+					if err := s.OptimizeTable(
+						context.WithoutCancel(ctx),
+						map[string]struct{}{lastTable: {}},
+					); err != nil {
+						g.Log().Error(ctx, err)
+					}
+				}()
+			}
 		}
 	}
 

@@ -32,7 +32,7 @@ table = ""
 [clickhouse.flush]
 count = 1000
 crontab = "*/10 * * * *"
-enableOptimizeTableWhenCrontabFlush = false
+enableOptimizeTableAfterInsert = false
 
 [clickhouse.optimizeTable]
 crontab = ""
