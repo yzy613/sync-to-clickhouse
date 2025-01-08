@@ -118,6 +118,7 @@ var (
 						if err := service.ClickHouse().OptimizeTable(ctx, table); err != nil {
 							g.Log().Error(ctx, err)
 						}
+						g.Log().Info(ctx, "optimize table done", len(table))
 					case <-loopCtx.Done():
 						signal.Stop(usrCh)
 						return

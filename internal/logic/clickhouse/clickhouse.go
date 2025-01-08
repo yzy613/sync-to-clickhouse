@@ -5,7 +5,6 @@ import (
 	"github.com/gogf/gf/v2/container/gqueue"
 	"github.com/gogf/gf/v2/database/gdb"
 	"github.com/gogf/gf/v2/errors/gerror"
-	"github.com/gogf/gf/v2/frame/g"
 	"github.com/gogf/gf/v2/os/gcron"
 	"golang.org/x/sync/errgroup"
 	"sync"
@@ -20,6 +19,9 @@ type sClickHouse struct {
 	popInsertMu     sync.Mutex
 
 	flushCount uint
+
+	optimizeTableQueue *gqueue.Queue
+	optimizeTableMu    sync.Mutex
 
 	crontab            *gcron.Cron
 	flushEntry         *gcron.Entry
@@ -50,25 +52,6 @@ func (s *sClickHouse) SetDBLink(link string) (err error) {
 
 func (s *sClickHouse) Flush(ctx context.Context) error {
 	return s.flushInsertQueue(ctx)
-}
-
-func (s *sClickHouse) OptimizeTable(ctx context.Context, table map[string]struct{}) (err error) {
-	if err = s.hasDB(); err != nil {
-		return
-	}
-
-	if len(table) > 1 {
-		g.Log().Info(ctx, "optimize table...")
-		defer g.Log().Info(ctx, "optimize table done", len(table))
-	}
-
-	for k := range table {
-		if _, err = s.db.Exec(ctx, "OPTIMIZE TABLE "+k+" FINAL"); err != nil {
-			return
-		}
-	}
-
-	return
 }
 
 func (s *sClickHouse) DumpToDisk(ctx context.Context) (err error) {
@@ -118,6 +101,11 @@ func (s *sClickHouse) Close(ctx context.Context) (errs []error) {
 	if s.insertQueue != nil {
 		s.insertQueue.Close()
 		s.insertQueue = nil
+	}
+
+	if s.optimizeTableQueue != nil {
+		s.optimizeTableQueue.Close()
+		s.optimizeTableQueue = nil
 	}
 
 	if s.db != nil {

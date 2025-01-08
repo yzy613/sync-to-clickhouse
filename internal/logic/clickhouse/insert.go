@@ -12,15 +12,15 @@ import (
 	"sync-to-clickhouse/utility"
 )
 
-type insertQueueData struct {
-	Table string              `json:"table"`
-	Data  []map[string]string `json:"data"`
-}
-
 func (s *sClickHouse) lazyInitInsertQueue() {
 	if s.insertQueue == nil {
 		s.insertQueue = gqueue.New()
 	}
+}
+
+type insertQueueData struct {
+	Table string              `json:"table"`
+	Data  []map[string]string `json:"data"`
 }
 
 type insertQueueDataSlice []insertQueueData
@@ -147,14 +147,9 @@ func (s *sClickHouse) flushInsertQueue(ctx context.Context) (err error) {
 				s.pushInsertQueueDataSlice(arr)
 			} else {
 				if service.Cfg().IsClickHouseOptimizeTableAfterInsert(ctx) {
-					go func() {
-						if err := s.OptimizeTable(
-							context.WithoutCancel(ctx),
-							map[string]struct{}{lastTable: {}},
-						); err != nil {
-							g.Log().Error(ctx, err)
-						}
-					}()
+					if err = s.OptimizeTable(ctx, map[string]struct{}{lastTable: {}}); err != nil {
+						g.Log().Error(ctx, err)
+					}
 				}
 			}
 		}
@@ -183,14 +178,9 @@ func (s *sClickHouse) flushInsertQueue(ctx context.Context) (err error) {
 			s.pushInsertQueueDataSlice(arr)
 		} else {
 			if service.Cfg().IsClickHouseOptimizeTableAfterInsert(ctx) {
-				go func() {
-					if err := s.OptimizeTable(
-						context.WithoutCancel(ctx),
-						map[string]struct{}{lastTable: {}},
-					); err != nil {
-						g.Log().Error(ctx, err)
-					}
-				}()
+				if err = s.OptimizeTable(ctx, map[string]struct{}{lastTable: {}}); err != nil {
+					g.Log().Error(ctx, err)
+				}
 			}
 		}
 	}
