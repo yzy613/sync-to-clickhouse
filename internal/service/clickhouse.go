@@ -13,7 +13,6 @@ type (
 	IClickHouse interface {
 		SetDBLink(link string) (err error)
 		Flush(ctx context.Context) error
-		OptimizeTable(ctx context.Context, table map[string]struct{}) (err error)
 		DumpToDisk(ctx context.Context) (err error)
 		RestoreFromDisk(ctx context.Context) (err error)
 		Close(ctx context.Context) (errs []error)
@@ -21,6 +20,7 @@ type (
 		SetCrontabFlush(ctx context.Context, crontabExpr string) (err error)
 		SetCrontabOptimizeTable(ctx context.Context, crontabExpr string, table map[string]struct{}) (err error)
 		Insert(ctx context.Context, table string, data []map[string]string) (err error)
+		OptimizeTable(ctx context.Context, table map[string]struct{}) (err error)
 	}
 )
 
