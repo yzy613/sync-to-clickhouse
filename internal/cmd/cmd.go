@@ -41,7 +41,9 @@ var (
 			}
 
 			// optimize table after insert
-			g.Log().Info(ctx, "optimize table after insert", service.Cfg().IsClickHouseOptimizeTableAfterInsert(ctx))
+			if boo := service.Cfg().IsClickHouseOptimizeTableAfterInsert(ctx); boo {
+				g.Log().Info(ctx, "optimize table after insert", boo)
+			}
 
 			// signal
 			signalCh := make(chan os.Signal, 1)
