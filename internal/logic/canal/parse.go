@@ -14,23 +14,21 @@ func (s *sCanal) ParseEntries(
 	tableWhitelist map[string]struct{},
 	entries []entry.Entry,
 ) (err error) {
-	for _, e := range entries {
-		entryType := e.GetEntryType()
-		if entryType == entry.EntryType_TRANSACTIONBEGIN ||
-			entryType == entry.EntryType_TRANSACTIONEND {
+	for _, ent := range entries {
+		switch ent.GetEntryType() {
+		case entry.EntryType_TRANSACTIONBEGIN, entry.EntryType_TRANSACTIONEND:
 			continue
 		}
 
 		rowChange := &entry.RowChange{}
-		if err = proto.Unmarshal(e.GetStoreValue(), rowChange); err != nil {
+		if err = proto.Unmarshal(ent.GetStoreValue(), rowChange); err != nil {
 			return
 		}
-
 		if rowChange == nil {
 			continue
 		}
 
-		header := e.GetHeader()
+		header := ent.GetHeader()
 
 		if len(schemaWhitelist) > 0 {
 			if _, ok := schemaWhitelist[header.GetSchemaName()]; !ok {
@@ -46,33 +44,23 @@ func (s *sCanal) ParseEntries(
 		eventType := rowChange.GetEventType()
 
 		rowDataSlice := rowChange.GetRowDatas()
-		rows := make([]map[string]string, 0, len(rowDataSlice))
+		insertRows := make([]map[string]string, 0, len(rowDataSlice))
 
 		for _, rowData := range rowDataSlice {
 			switch eventType {
-			case entry.EventType_UPDATE:
-				row := s.ReduceColumns(rowData.GetAfterColumns())
-				if err = service.ClickHouse().Insert(ctx, header.GetTableName(), []map[string]string{row}); err != nil {
-					g.Log().Error(ctx, err)
-					continue
+			case entry.EventType_INSERT, entry.EventType_UPDATE:
+				if row := s.ReduceColumns(rowData.GetAfterColumns()); row != nil {
+					insertRows = append(insertRows, row)
 				}
 
 			case entry.EventType_DELETE:
 				// none
-
-			case entry.EventType_INSERT:
-				row := s.ReduceColumns(rowData.GetAfterColumns())
-				if row != nil {
-					rows = append(rows, row)
-				}
 			}
 		}
 
-		switch eventType {
-		case entry.EventType_INSERT:
-			if err = service.ClickHouse().Insert(ctx, header.GetTableName(), rows); err != nil {
+		if len(insertRows) > 0 {
+			if err = service.ClickHouse().Insert(ctx, header.GetTableName(), insertRows); err != nil {
 				g.Log().Error(ctx, err)
-				continue
 			}
 		}
 	}

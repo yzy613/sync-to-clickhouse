@@ -117,7 +117,7 @@ func (s *sClickHouse) flushInsertQueue(ctx context.Context) (err error) {
 
 	g.Log().Info(ctx, "flush insert queue", len(poppedSlice))
 
-	sort.Sort(poppedSlice)
+	sort.Stable(poppedSlice)
 
 	var (
 		lastTable string

@@ -1,13 +1,15 @@
 #!/bin/bash
 
 # 配置变量
-CLICKHOUSE_HOST="localhost"  # ClickHouse服务器地址
-CLICKHOUSE_PORT="9000"       # ClickHouse服务器端口
-CLICKHOUSE_USER="default"    # ClickHouse用户名
-CLICKHOUSE_PASSWORD=""       # ClickHouse密码（如果没有密码，留空）
-CLICKHOUSE_DATABASE="default"  # 使用的数据库
-SQL_FILE="sync.sql"        # SQL文件路径
+CLICKHOUSE_HOST="localhost"         # ClickHouse服务器地址
+CLICKHOUSE_PORT="9000"              # ClickHouse服务器端口
+CLICKHOUSE_USER="default"           # ClickHouse用户名
+CLICKHOUSE_PASSWORD=""              # ClickHouse密码（如果没有密码，留空）
+CLICKHOUSE_DATABASE="default"       # 使用的数据库
+DEFAULT_SQL_FILE="sync.sql"         # 默认SQL文件路径
 TARGET_PROCESS="sync-to-clickhouse" # 目标进程名
+
+SQL_FILE="${1:-$DEFAULT_SQL_FILE}"
 
 # 日志函数：格式化echo输出
 log_message() {
@@ -30,6 +32,9 @@ if [ ! -f "$SQL_FILE" ]; then
     log_message "Error: $SQL_FILE does not exist."
     exit 1
 fi
+
+# 打印将要执行的SQL文件名
+log_message "Preparing to execute SQL file: $SQL_FILE"
 
 # 运行SQL文件
 if [ -z "$CLICKHOUSE_PASSWORD" ]; then
