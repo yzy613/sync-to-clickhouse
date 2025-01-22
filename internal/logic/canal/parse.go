@@ -59,7 +59,7 @@ func (s *sCanal) ParseEntries(
 		}
 
 		if len(insertRows) > 0 {
-			if err = service.ClickHouse().Insert(ctx, header.GetTableName(), insertRows); err != nil {
+			if err := service.ClickHouse().Insert(ctx, header.GetTableName(), insertRows); err != nil {
 				g.Log().Error(ctx, err)
 			}
 		}

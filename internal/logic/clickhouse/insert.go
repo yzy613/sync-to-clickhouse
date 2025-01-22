@@ -111,7 +111,7 @@ func (s *sClickHouse) flushInsertQueue(ctx context.Context) (err error) {
 			poppedSlice = append(poppedSlice, d)
 		}
 	}()
-	if poppedSlice == nil || len(poppedSlice) == 0 {
+	if len(poppedSlice) == 0 {
 		return
 	}
 
@@ -119,68 +119,39 @@ func (s *sClickHouse) flushInsertQueue(ctx context.Context) (err error) {
 
 	sort.Stable(poppedSlice)
 
-	var (
-		lastTable string
-		lastIdx   = 0
-	)
-	for i := range poppedSlice {
-		if lastTable == poppedSlice[i].Table {
-			continue
+	i := 0
+	for i < len(poppedSlice) {
+		tableName := poppedSlice[i].Table
+		j := i + 1
+
+		for j < len(poppedSlice) && poppedSlice[j].Table == tableName {
+			j++
 		}
 
-		if i != 0 {
-			arr := poppedSlice[lastIdx:i]
+		batch := poppedSlice[i:j]
+		i = j
 
-			tmp := make([]map[string]string, 0, len(arr))
-			for _, v := range arr {
-				tmp = append(tmp, v.Data...)
-			}
-
-			if lastTable == "" || len(tmp) == 0 {
-				continue
-			}
-
-			stmt, args := utility.InsertStatement(lastTable, tmp)
-
-			if _, err = s.db.Exec(ctx, stmt, args); err != nil {
-				g.Log().Error(ctx, err)
-				s.pushInsertQueueDataSlice(arr)
-			} else {
-				if service.Cfg().IsClickHouseOptimizeTableAfterInsert(ctx) {
-					if err = s.OptimizeTable(ctx, map[string]struct{}{lastTable: {}}); err != nil {
-						g.Log().Error(ctx, err)
-					}
-				}
-			}
-		}
-
-		lastTable = poppedSlice[i].Table
-		lastIdx = i
-	}
-
-	// last
-	if lastTable != "" && lastIdx < len(poppedSlice) {
-		arr := poppedSlice[lastIdx:]
-
-		tmp := make([]map[string]string, 0, len(arr))
-		for _, v := range arr {
+		tmp := make([]map[string]string, 0, len(batch))
+		for _, v := range batch {
 			tmp = append(tmp, v.Data...)
 		}
 
 		if len(tmp) == 0 {
-			return
+			continue
 		}
 
-		stmt, args := utility.InsertStatement(lastTable, tmp)
+		stmt, args := utility.InsertStatement(tableName, tmp)
 
-		if _, err = s.db.Exec(ctx, stmt, args); err != nil {
+		if _, err := s.db.Exec(ctx, stmt, args); err != nil {
+			s.pushInsertQueueDataSlice(batch)
+
 			g.Log().Error(ctx, err)
-			s.pushInsertQueueDataSlice(arr)
-		} else {
-			if service.Cfg().IsClickHouseOptimizeTableAfterInsert(ctx) {
-				if err = s.OptimizeTable(ctx, map[string]struct{}{lastTable: {}}); err != nil {
-					g.Log().Error(ctx, err)
-				}
+			continue
+		}
+
+		if service.Cfg().IsClickHouseOptimizeTableAfterInsert(ctx) {
+			if err := s.OptimizeTable(ctx, map[string]struct{}{tableName: {}}); err != nil {
+				g.Log().Error(ctx, err)
 			}
 		}
 	}
@@ -217,7 +188,7 @@ func (s *sClickHouse) dumpInsertQueueToDisk(ctx context.Context) (err error) {
 			data = append(data, d)
 		}
 	}()
-	if data == nil || len(data) == 0 {
+	if len(data) == 0 {
 		return
 	}
 

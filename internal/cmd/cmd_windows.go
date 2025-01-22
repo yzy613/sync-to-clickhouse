@@ -1,4 +1,4 @@
-//go:build !windows
+//go:build windows
 
 package cmd
 
@@ -92,43 +92,43 @@ var (
 			}
 
 			// handle flush signal
-			go func() {
-				usrCh := make(chan os.Signal, 1)
-				signal.Notify(usrCh, syscall.SIGUSR1)
-
-				for {
-					select {
-					case <-usrCh:
-						g.Log().Info(ctx, "signal received, flush...")
-						if err := service.ClickHouse().Flush(ctx); err != nil {
-							g.Log().Error(ctx, err)
-						}
-					case <-loopCtx.Done():
-						signal.Stop(usrCh)
-						return
-					}
-				}
-			}()
+			//go func() {
+			//	usrCh := make(chan os.Signal, 1)
+			//	signal.Notify(usrCh, syscall.SIGUSR1)
+			//
+			//	for {
+			//		select {
+			//		case <-usrCh:
+			//			g.Log().Info(ctx, "signal received, flush...")
+			//			if err := service.ClickHouse().Flush(ctx); err != nil {
+			//				g.Log().Error(ctx, err)
+			//			}
+			//		case <-loopCtx.Done():
+			//			signal.Stop(usrCh)
+			//			return
+			//		}
+			//	}
+			//}()
 
 			// handle optimize table signal
-			go func() {
-				usrCh := make(chan os.Signal, 1)
-				signal.Notify(usrCh, syscall.SIGUSR2)
-
-				for {
-					select {
-					case <-usrCh:
-						g.Log().Info(ctx, "signal received, optimize table...")
-						if err := service.ClickHouse().OptimizeTable(ctx, table); err != nil {
-							g.Log().Error(ctx, err)
-						}
-						g.Log().Info(ctx, "optimize table done", len(table))
-					case <-loopCtx.Done():
-						signal.Stop(usrCh)
-						return
-					}
-				}
-			}()
+			//go func() {
+			//	usrCh := make(chan os.Signal, 1)
+			//	signal.Notify(usrCh, syscall.SIGUSR2)
+			//
+			//	for {
+			//		select {
+			//		case <-usrCh:
+			//			g.Log().Info(ctx, "signal received, optimize table...")
+			//			if err := service.ClickHouse().OptimizeTable(ctx, table); err != nil {
+			//				g.Log().Error(ctx, err)
+			//			}
+			//			g.Log().Info(ctx, "optimize table done", len(table))
+			//		case <-loopCtx.Done():
+			//			signal.Stop(usrCh)
+			//			return
+			//		}
+			//	}
+			//}()
 
 			// canal
 		canalLoop:
