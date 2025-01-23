@@ -215,9 +215,6 @@ func (s *sClickHouse) restoreInsertQueueFromDisk(ctx context.Context) (err error
 	if err != nil {
 		return
 	}
-	if err = os.Remove(s.insertQueuePath); err != nil {
-		return
-	}
 
 	var data []insertQueueData
 	if err = sonic.Unmarshal(dataBytes, &data); err != nil {
@@ -230,6 +227,10 @@ func (s *sClickHouse) restoreInsertQueueFromDisk(ctx context.Context) (err error
 	g.Log().Info(ctx, "restore insert queue", len(data))
 
 	s.pushInsertQueueDataSlice(data)
+
+	if err = os.Remove(s.insertQueuePath); err != nil {
+		return
+	}
 
 	if err = s.flushInsertQueue(ctx); err != nil {
 		return err
