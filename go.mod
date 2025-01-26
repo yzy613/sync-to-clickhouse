@@ -3,12 +3,12 @@ module sync-to-clickhouse
 go 1.23
 
 require (
-	github.com/bytedance/sonic v1.12.7
+	github.com/bytedance/sonic v1.12.8
 	github.com/gogf/gf/contrib/drivers/clickhouse/v2 v2.8.3
 	github.com/gogf/gf/v2 v2.8.3
 	github.com/withlin/canal-go v1.1.2
 	golang.org/x/sync v0.10.0
-	google.golang.org/protobuf v1.36.3
+	google.golang.org/protobuf v1.36.4
 )
 
 require (
