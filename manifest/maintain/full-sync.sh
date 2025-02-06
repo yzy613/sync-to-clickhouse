@@ -14,7 +14,7 @@ SQL_FILE="${1:-$DEFAULT_SQL_FILE}"
 # 日志函数：格式化echo输出
 log_message() {
     local MESSAGE="$1"
-    local TIMESTAMP=$(date "+%F %T %z")
+    local TIMESTAMP=$(date +"%F %T %z")
     echo "$TIMESTAMP $MESSAGE"
 }
 
