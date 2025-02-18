@@ -44,6 +44,34 @@ func (s *sClickHouse) pushInsertQueueDataSlice(data []insertQueueData) {
 	}
 }
 
+func (s *sClickHouse) popInsertQueueDataSlice(ctx context.Context) (data []insertQueueData) {
+	s.lazyInitInsertQueue()
+
+	s.popInsertMu.Lock()
+	defer s.popInsertMu.Unlock()
+
+	insertQueueLen := s.insertQueue.Len()
+	if insertQueueLen == 0 {
+		return
+	}
+
+	data = make([]insertQueueData, 0, insertQueueLen)
+	for range insertQueueLen {
+		v := s.insertQueue.Pop()
+		if v == nil {
+			continue
+		}
+
+		d, ok := v.(insertQueueData)
+		if !ok {
+			g.Log().Panic(ctx, "invalid insert queue data")
+		}
+		data = append(data, d)
+	}
+
+	return
+}
+
 func (s *sClickHouse) Insert(ctx context.Context, table string, data []map[string]string) (err error) {
 	if table == "" || len(data) == 0 {
 		err = gerror.New("invalid insert data")
@@ -87,30 +115,7 @@ func (s *sClickHouse) flushInsertQueue(ctx context.Context) (err error) {
 	}
 	s.lazyInitInsertQueue()
 
-	var poppedSlice insertQueueDataSlice
-	func() {
-		s.popInsertMu.Lock()
-		defer s.popInsertMu.Unlock()
-
-		insertQueueLen := s.insertQueue.Len()
-		if insertQueueLen == 0 {
-			return
-		}
-
-		poppedSlice = make(insertQueueDataSlice, 0, insertQueueLen)
-		for i := int64(0); i < insertQueueLen; i++ {
-			v := s.insertQueue.Pop()
-			if v == nil {
-				continue
-			}
-
-			d, ok := v.(insertQueueData)
-			if !ok {
-				g.Log().Panic(ctx, "invalid insert queue data")
-			}
-			poppedSlice = append(poppedSlice, d)
-		}
-	}()
+	var poppedSlice insertQueueDataSlice = s.popInsertQueueDataSlice(ctx)
 	if len(poppedSlice) == 0 {
 		return
 	}
@@ -164,30 +169,7 @@ func (s *sClickHouse) dumpInsertQueueToDisk(ctx context.Context) (err error) {
 		return
 	}
 
-	var data []insertQueueData
-	func() {
-		s.popInsertMu.Lock()
-		defer s.popInsertMu.Unlock()
-
-		insertQueueLen := s.insertQueue.Len()
-		if insertQueueLen == 0 {
-			return
-		}
-
-		data = make([]insertQueueData, 0, insertQueueLen)
-		for i := int64(0); i < insertQueueLen; i++ {
-			v := s.insertQueue.Pop()
-			if v == nil {
-				continue
-			}
-
-			d, ok := v.(insertQueueData)
-			if !ok {
-				g.Log().Panic(ctx, "invalid insert queue data")
-			}
-			data = append(data, d)
-		}
-	}()
+	data := s.popInsertQueueDataSlice(ctx)
 	if len(data) == 0 {
 		return
 	}
