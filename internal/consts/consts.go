@@ -7,7 +7,7 @@ import (
 
 const (
 	ProjName = "sync-to-clickhouse"
-	Version  = "0.1.6"
+	Version  = "0.1.7"
 )
 
 var (
